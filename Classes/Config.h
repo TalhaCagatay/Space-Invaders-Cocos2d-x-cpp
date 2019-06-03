@@ -12,11 +12,11 @@
 #define AGENT_ROCKET_TAG	65442
 
 // Motion displacement
-#define SHIP_DELTA_X			18.f
+#define SHIP_DELTA_X			20.f
 #define SHIP_DELTA_Y			.5f
 #define ROCKET_DELTA_Y			14.f
 
 // shoot speed
-#define NORMAL_SPEED			.3f
-#define SPECIAL_SPEED			.15f
+#define NORMAL_SPEED			.5f
+#define SPECIAL_SPEED			.2f
 #define SPECIAL_DELAY			5.f

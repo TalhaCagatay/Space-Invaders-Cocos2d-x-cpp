@@ -1,5 +1,6 @@
 
 #include "GameScene.h"
+#include "GameOverScene.h"
 #include "Agent.h"
 #include "AgentPool.h"
 #include "Config.h"
@@ -135,7 +136,7 @@ bool GameScene::init()
 	auto frame = Sprite::create("prog_frame.png");
 	frame->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
 	frame->setScaleX(0.5f);
-	frame->setPosition(Point(dispLabel->getPositionX() - 35.f, dispLabel->getPositionY() - 20.f));
+	frame->setPosition(Point(dispLabel->getPositionX() -35.f, dispLabel->getPositionY() - 20.f));
 	this->addChild(frame, 10);
 
 	_progBarSprite = Sprite::create("prog_bar.png");
@@ -172,6 +173,9 @@ bool GameScene::init()
 	_isTouchBegan = false;
 	_isSpecialMode = false;
 	_killCntInNormal = 0;
+	_level = 0;
+	_elapsed = 0.f;
+	_rocketElapsed = 0.f;
 	_specialMenuItem->setEnabled(false);
 
 	// add event handlers
@@ -189,9 +193,9 @@ bool GameScene::init()
 	_eventDispatcher->addEventListenerWithSceneGraphPriority(contactListener, this);
 
 	// define schedulers
-	generateEnemies();
-	schedule(schedule_selector(GameScene::generateEnemies), 30.f);
-	schedule(schedule_selector(GameScene::generateRockets), NORMAL_SPEED);
+	//generateEnemies();
+	/*schedule(schedule_selector(GameScene::generateEnemies), 30.f);*/
+	//schedule(schedule_selector(GameScene::generateRockets), NORMAL_SPEED);
 	scheduleOnce(schedule_selector(GameScene::enableSpecialMenuItem), 20.f);
 	scheduleUpdate();
     return true;
@@ -232,9 +236,7 @@ bool GameScene::onContactBegin(cocos2d::PhysicsContact &contact)
 		this->removeChild(shapeB);
 		AgentPool::getInstance()->returnAgent((AgentSprite*)shapeB);
 
-		int curscore = std::atoi(_scoreLabel->getString().c_str());
-		curscore += 20;
-		_scoreLabel->setString(StringUtils::format("%d", curscore));
+		increaseScore();
 
 		if (!_isSpecialMode)
 		{
@@ -242,39 +244,16 @@ bool GameScene::onContactBegin(cocos2d::PhysicsContact &contact)
 			_progBarSprite->setContentSize(Size(168.07f * _killCntInNormal / 10, 24.f));
 			if (_killCntInNormal == 10)
 			{	//	enter to special mode
-				_killCntInNormal = 0;
-				_isSpecialMode = true;
-
-				unschedule(schedule_selector(GameScene::generateRockets));
-				schedule(schedule_selector(GameScene::generateRockets), SPECIAL_SPEED);
-				scheduleOnce(schedule_selector(GameScene::convertToNormal), SPECIAL_DELAY);
+				convertState(true);
 			}
 		}
 	}
 	else if (shapeA->getTag() == AGENT_SELF_TAG
-		|| shapeA->getTag() == AGENT_SELF_TAG)
-	{	// self has collided, exit game
-		unscheduleUpdate();
-		unschedule(schedule_selector(GameScene::generateEnemies));
-		unschedule(schedule_selector(GameScene::generateRockets));		
-		_specialMenuItem->setEnabled(false);
-
-		auto visibleSize = Director::getInstance()->getVisibleSize();
-		Vec2 origin = Director::getInstance()->getVisibleOrigin();
-		auto stateLabel = Label::createWithTTF("Crashed. Game Exit!", "fonts/Marker Felt.ttf", 32);
-		if (stateLabel == nullptr)
-		{
-			log_trace("'fonts/Marker Felt.ttf' is missing.");
-		}
-		else
-		{
-			// position the label on the center of the screen
-			stateLabel->setPosition(Vec2(origin.x + visibleSize.width / 2,
-				origin.y + (visibleSize.height - stateLabel->getContentSize().height) / 2));
-
-			// add the label as a child to this layer
-			this->addChild(stateLabel, 10);
-		}
+		|| shapeB->getTag() == AGENT_SELF_TAG)
+	{	// crashed
+		auto scene = GameOverScene::createScene();
+		Director::getInstance()->replaceScene(TransitionFlipX::create(0.1f, scene));
+		return false;
 	}
 
 	return true;
@@ -291,13 +270,15 @@ void GameScene::menuSpecialCallback(Ref* pSender)
 	cocos2d::Vector<Node*> children = this->getChildren();
 	for each (Node* child in children)
 	{
-		if (child->getTag() != AGENT_ENEMY_TAG) 
+		if (child->getTag() != AGENT_ENEMY_TAG 
+						&& child->getTag() != AGENT_ROCKET_TAG)
 		{
 			continue;
 		}
 
 		this->removeChild(child);
 		AgentPool::getInstance()->returnAgent((AgentSprite*)child);
+		increaseScore();
 	}
 
 	((MenuItemImage*)pSender)->setEnabled(false);
@@ -324,18 +305,62 @@ void GameScene::generateRockets(float dt)
 	}
 }
 
+void GameScene::increaseScore()
+{
+	int curscore = std::atoi(_scoreLabel->getString().c_str());
+	curscore += 20;
+	_scoreLabel->setString(StringUtils::format("%d", curscore));
+}
+
+void GameScene::showCrashState()
+{
+	unscheduleUpdate();
+	_specialMenuItem->setEnabled(false);
+	this->stopAllActions();
+
+	auto visibleSize = Director::getInstance()->getVisibleSize();
+	Vec2 origin = Director::getInstance()->getVisibleOrigin();
+	auto stateLabel = Label::createWithTTF("Crashed. Game Exit!", "fonts/Marker Felt.ttf", 32);
+	if (stateLabel == nullptr)
+	{
+		log_trace("'fonts/Marker Felt.ttf' is missing.");
+	}
+	else
+	{
+		// position the label on the center of the screen
+		stateLabel->setPosition(Vec2(origin.x + visibleSize.width / 2,
+			origin.y + (visibleSize.height - stateLabel->getContentSize().height) / 2));
+
+		// add the label as a child to this layer
+		this->addChild(stateLabel, 10);
+	}
+
+
+}
+
 void GameScene::enableSpecialMenuItem(float dt)
 {
 	_specialMenuItem->setEnabled(true);
 }
 
-void GameScene::convertToNormal(float dt)
+void GameScene::convertState(bool bSpecialMode)
 {
-	_isSpecialMode = false;
-	_killCntInNormal = 0.f;
-	_progBarSprite->setContentSize(Size(168.07f * _killCntInNormal / 10, 24.f));
-	unschedule(schedule_selector(GameScene::generateRockets));
-	schedule(schedule_selector(GameScene::generateRockets), NORMAL_SPEED);
+	_killCntInNormal = 0;
+	_isSpecialMode = bSpecialMode;
+
+	//unschedule(schedule_selector(GameScene::generateRockets));
+	//schedule(schedule_selector(GameScene::generateRockets), _isSpecialMode ? SPECIAL_SPEED : NORMAL_SPEED);
+	
+	if (!_isSpecialMode)
+	{
+		_progBarSprite->setContentSize(Size(0.f, 24.f));
+	}
+	else
+	{	// convert to normal mode after delay time.
+		auto delayAction = DelayTime::create(SPECIAL_DELAY);
+		auto convertAction = CallFunc::create(CC_CALLBACK_0(GameScene::convertState, this, false));
+		this->runAction(Sequence::createWithTwoActions(delayAction, convertAction));
+	}
 }
 
 /**
@@ -350,12 +375,14 @@ void GameScene::generateEnemies(float dt)
 #define	SHIP_OCCU_HEIGHT	SHIP_HEIGHT * 3 / 2
 #define MARGIN_X			SHIP_WIDTH / 2
 
-	int cnt_per_row = (visibleSize.width - MARGIN_X * 2) / SHIP_OCCU_WIDTH;
+	int col_cnt = (visibleSize.width - MARGIN_X * 2) / SHIP_OCCU_WIDTH;
+	int row_cnt = std::min(++_level + 1, 5);
+	_level = row_cnt - 1;
 
 	// arrange items in 3 rows
-	for (int j = 0; j < 3; j++)
+	for (int j = 0; j < row_cnt; j++)
 	{
-		for (int i = 0; i < cnt_per_row; i++)
+		for (int i = 0; i < col_cnt; i++)
 		{
 			auto enemySprite = AgentPool::getInstance()->getAgent(AGENT_ENEMY_TAG);
 			if (enemySprite == nullptr) {
@@ -376,8 +403,16 @@ void GameScene::generateEnemies(float dt)
 */
 void GameScene::update(float dt)
 {
+	_rocketElapsed += dt;
+	if ((_isSpecialMode && _rocketElapsed >= SPECIAL_SPEED)
+		|| (!_isSpecialMode && _rocketElapsed >= NORMAL_SPEED))
+	{
+		_rocketElapsed = 0.f;
+		generateRockets();
+	}
+
 	/*_elapsed += dt;
-	if (_elapsed < 0.05f)
+	if (_elapsed < 0.1f)
 	{
 		return;
 	}
@@ -385,6 +420,8 @@ void GameScene::update(float dt)
 	_elapsed = 0.f;*/
 	auto visibleSize = Director::getInstance()->getVisibleSize();
 	Vec2 origin = Director::getInstance()->getVisibleOrigin();
+
+	bool bEnemyExist = false;
 
 	cocos2d::Vector<Node*> children = this->getChildren();
 	for each (Node* child in children)
@@ -433,7 +470,17 @@ void GameScene::update(float dt)
 				this->removeChild(agent);
 				AgentPool::getInstance()->returnAgent(agent);
 			}
+			else 
+			{
+				bEnemyExist = true;
+			}
 		}
+	}
+
+	// if no enemies, then to appear enemies
+	if (!bEnemyExist)
+	{
+		generateEnemies();
 	}
 }
 

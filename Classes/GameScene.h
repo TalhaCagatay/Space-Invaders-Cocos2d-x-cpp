@@ -1,6 +1,6 @@
 
-#ifndef __HELLOWORLD_SCENE_H__
-#define __HELLOWORLD_SCENE_H__
+#ifndef __GAME_SCENE_H__
+#define __GAME_SCENE_H__
 
 #include "cocos2d.h"
 
@@ -27,21 +27,26 @@ public:
 
 private:
 	void enableSpecialMenuItem(float dt = 0.f);
-	void convertToNormal(float dt = 0.f);
+	void convertState(bool bSpecialMode);
 	void generateEnemies(float dt = 0.f);
 	void generateRockets(float dt = 0.f);
 	void SetPhysicsWorld(cocos2d::PhysicsWorld *world) { _sceneWorld = world; };
+	void increaseScore();
+	void showCrashState();
 
 private:
 	cocos2d::Label*				_scoreLabel;		// score label
 	cocos2d::MenuItemSprite*	_specialMenuItem;	// special menu item
 	cocos2d::Sprite*			_progBarSprite;		// progress bar to show kill count in normal
+
 	float						_elapsed;			// time has elapsed
+	float						_rocketElapsed;		// time after last rocket
 	bool						_isTouchBegan;		// indicate if touch has begined
 	float						_touchXPos;			// touched x position
 
 	bool						_isSpecialMode;		// indicate if special mode
 	int							_killCntInNormal;	// kill enemy count in normal mode.
+	int							_level;
 	cocos2d::PhysicsWorld *		_sceneWorld;
 };
 
