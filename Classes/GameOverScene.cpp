@@ -130,3 +130,4 @@ void GameOverScene::menuRetryCallback(Ref* pSender)
 	auto scene = GameScene::createScene();
 	Director::getInstance()->replaceScene(TransitionFade::create(1.f, scene));
 }
+

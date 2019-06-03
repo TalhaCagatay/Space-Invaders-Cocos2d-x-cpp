@@ -136,7 +136,7 @@ bool GameScene::init()
 	auto frame = Sprite::create("prog_frame.png");
 	frame->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
 	frame->setScaleX(0.5f);
-	frame->setPosition(Point(dispLabel->getPositionX() -35.f, dispLabel->getPositionY() - 20.f));
+	frame->setPosition(Point(dispLabel->getPositionX() - 35.f, dispLabel->getPositionY() - 20.f));
 	this->addChild(frame, 10);
 
 	_progBarSprite = Sprite::create("prog_bar.png");
@@ -251,6 +251,7 @@ bool GameScene::onContactBegin(cocos2d::PhysicsContact &contact)
 	else if (shapeA->getTag() == AGENT_SELF_TAG
 		|| shapeB->getTag() == AGENT_SELF_TAG)
 	{	// crashed
+		this->stopAllActions();
 		auto scene = GameOverScene::createScene();
 		Director::getInstance()->replaceScene(TransitionFlipX::create(0.1f, scene));
 		return false;
@@ -371,11 +372,13 @@ void GameScene::generateEnemies(float dt)
 	auto visibleSize = Director::getInstance()->getVisibleSize();
 	Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
-#define	SHIP_OCCU_WIDTH		SHIP_WIDTH * 3 / 2
-#define	SHIP_OCCU_HEIGHT	SHIP_HEIGHT * 3 / 2
-#define MARGIN_X			SHIP_WIDTH / 2
+#define	SHIP_OCCU_WIDTH		SHIP_WIDTH * 3.f / 2.f
+#define	SHIP_OCCU_HEIGHT	SHIP_HEIGHT * 3.f / 2.f
+#define MARGIN_X			SHIP_WIDTH / 2.f
 
-	int col_cnt = (visibleSize.width - MARGIN_X * 2) / SHIP_OCCU_WIDTH;
+	float occu_width = SHIP_OCCU_WIDTH;
+	float delta_val = visibleSize.width - MARGIN_X * 2.f;
+	int col_cnt = delta_val / occu_width + 1;
 	int row_cnt = std::min(++_level + 1, 5);
 	_level = row_cnt - 1;
 
@@ -418,6 +421,7 @@ void GameScene::update(float dt)
 	}
 
 	_elapsed = 0.f;*/
+
 	auto visibleSize = Director::getInstance()->getVisibleSize();
 	Vec2 origin = Director::getInstance()->getVisibleOrigin();
 

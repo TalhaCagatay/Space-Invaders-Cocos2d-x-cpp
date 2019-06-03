@@ -64,5 +64,5 @@ bool AgentSprite::init()
 
 void AgentSprite::reset()
 {
-
+	//RESET!
 }
