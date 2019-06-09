@@ -13,8 +13,7 @@ Scene* GameOverScene::createScene()
 // on "init" you need to initialize your instance
 bool GameOverScene::init()
 {
-    //////////////////////////////
-    // 1. super init first
+    // super init first
     if ( !Scene::init() )
     {
         return false;
@@ -65,9 +64,6 @@ bool GameOverScene::init()
     auto menu = Menu::create(exitItem, retryItem, NULL);
     menu->setPosition(Vec2::ZERO);
     this->addChild(menu, 10);
-
-    /////////////////////////////
-    // 3. add your codes below...
 
     // add a label shows game title
     // create and initialize a label

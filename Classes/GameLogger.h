@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#define LOG_VERSION "0.1.0"
+constexpr auto LOG_VERSION = "0.1.0";
 
 typedef void (*log_LockFn)(void *udata, int lock);
 

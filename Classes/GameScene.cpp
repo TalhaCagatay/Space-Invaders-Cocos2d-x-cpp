@@ -26,7 +26,7 @@ Scene* GameScene::createScene()
 bool GameScene::init()
 {
     //////////////////////////////
-    // 1. super init first
+    // super init first
     if ( !Scene::init() )
     {
         return false;
@@ -34,10 +34,6 @@ bool GameScene::init()
 
     auto visibleSize = Director::getInstance()->getVisibleSize();
     Vec2 origin = Director::getInstance()->getVisibleOrigin();
-
-    /////////////////////////////
-    // 2. add a menu item with "X" image, which is clicked to quit the program
-    //    you may modify it.
 
     // add a "close" icon to exit the progress. it's an autorelease object
     auto closeItem = MenuItemImage::create(
@@ -82,9 +78,6 @@ bool GameScene::init()
     menu->setPosition(Vec2::ZERO);
     this->addChild(menu, 10);
 
-    /////////////////////////////
-    // 3. add your codes below...
-
     // add a label shows game title
     // create and initialize a label
     auto titleLabel = Label::createWithTTF("Space Invaders", "fonts/Marker Felt.ttf", 24);
@@ -94,7 +87,7 @@ bool GameScene::init()
     }
     else
     {
-        // position the label on the center of the screen
+        // position the label on the top center of the screen
         titleLabel->setPosition(Vec2(origin.x + visibleSize.width/2,
                                 origin.y + visibleSize.height - titleLabel->getContentSize().height));
 
@@ -109,7 +102,7 @@ bool GameScene::init()
 	}
 	else
 	{
-		// position the label on the center of the screen
+		// position the label on the top left of the screen
 		dispLabel->setPosition(Vec2(origin.x + 50, origin.y + visibleSize.height - 30));
 
 		// add the label as a child to this layer
