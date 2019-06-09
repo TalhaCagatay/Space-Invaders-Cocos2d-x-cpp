@@ -375,7 +375,7 @@ void GameScene::generateEnemies(float dt)
 	int row_cnt = std::min(++_level + 1, 5);
 	_level = row_cnt - 1;
 
-	// arrange items in 3 rows
+	// arrange items in rows (2, 3, 4 and 5 rows of enemies, 5 is max)
 	for (int j = 0; j < row_cnt; j++)
 	{
 		for (int i = 0; i < col_cnt; i++)
